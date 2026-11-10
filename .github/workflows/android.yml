@@ -1,0 +1,63 @@
+name: Gerar APK ScreenCast
+
+on:
+  push:
+    branches: [main]
+    paths: ['screencast_mobile/app/**', 'screencast_mobile/*.gradle', 'screencast_mobile/gradle.properties', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write   # necessário para publicar o APK em "Releases"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Android SDK (aceita as licenças)
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'   # sem o pacote antigo "tools"
+
+      - name: Cache do Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar APK
+        working-directory: screencast_mobile
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon --stacktrace assembleDebug
+
+      - name: Conferir o APK
+        run: |
+          APK=screencast_mobile/app/build/outputs/apk/debug/app-debug.apk
+          test -s "$APK"
+          ls -lh "$APK"
+          cp "$APK" ScreenCast.apk
+          unzip -tq ScreenCast.apk   # falha se o arquivo estiver corrompido
+
+      - name: Guardar APK (aba Actions)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScreenCast-APK
+          path: ScreenCast.apk
+          if-no-files-found: error
+
+      - name: Publicar APK em Releases (download direto, sem ZIP)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest ScreenCast.apk \
+            --title "ScreenCast (APK mais recente)" \
+            --notes "Baixe o arquivo ScreenCast.apk e instale no celular." \
+            --target "${{ github.sha }}"

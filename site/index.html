@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10131b">
+<title>ScreenCast — Sala colaborativa</title>
+<link rel="icon" href="favicon.png">
+<style>
+:root{color-scheme:dark;--bg:#0d0a16;--panel:#171c27;--panel2:#202737;--line:#2b3446;--text:#f4f6fb;--muted:#a5afc2;--accent:#8b5cf6;--green:#39d98a;--red:#ff647c}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#241446 0,#0d0a16 55%);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text);min-height:100vh}
+main{width:min(1100px,100%);margin:auto;padding:25px 18px 55px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px}.brand{font-weight:800;font-size:20px;letter-spacing:.2px}.brand span{color:var(--accent)}.pill{border:1px solid var(--line);border-radius:99px;padding:6px 10px;color:var(--muted);font-size:12px}
+h1{font-size:clamp(27px,5vw,42px);line-height:1.1;margin:0 0 10px}.sub{color:var(--muted);margin:0 0 24px}.card{background:rgba(23,28,39,.94);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 18px 50px #0004;margin:16px 0}
+.field{display:flex;gap:9px;flex-wrap:wrap}.field input{flex:1;min-width:180px}.input{width:100%;padding:14px 15px;border:1px solid var(--line);border-radius:12px;background:#0e131d;color:var(--text);font:inherit;outline:none}.input:focus{border-color:var(--accent)}button{font:inherit}.btn{border:0;border-radius:12px;padding:13px 17px;font-weight:750;background:var(--accent);color:white;cursor:pointer}.btn:disabled{opacity:.45;cursor:not-allowed}.btn.secondary{background:#2b3446}.btn.danger{background:#9f3048}.btn.full{width:100%;margin-top:12px}.hint{color:var(--muted);font-size:13px;margin:12px 0 0}.status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-top:14px}.dot{width:8px;height:8px;border-radius:50%;background:#778198;flex:none}.dot.live{background:var(--green);box-shadow:0 0 12px var(--green)}
+.roomline{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 16px}.code{font:700 20px ui-monospace,monospace;letter-spacing:2px}.hidden{display:none!important}.notice{padding:12px 14px;background:#342b1d;border:1px solid #67502a;color:#f2d69c;border-radius:12px;font-size:13px;margin-top:15px}.foot{color:#758097;font-size:12px;text-align:center;margin-top:25px}
+#streamsGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:14px;margin-top:16px}.stream-tile{background:#090c13;border:1px solid var(--line);border-radius:15px;overflow:hidden;min-width:0}.stream-tile video{display:block;width:100%;max-height:60vh;aspect-ratio:16/9;object-fit:contain;background:#000}.stream-label{padding:9px 12px;color:var(--muted);font-size:13px;display:flex;align-items:center;gap:8px}.empty{padding:35px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:15px}.empty b{display:block;color:var(--text);font-size:17px;margin-bottom:5px}.room-actions{display:flex;gap:9px;flex-wrap:wrap}.room-actions .btn{flex:1}
+#mobileShareBar{display:none}
+@media(max-width:600px){main{padding:18px 13px 105px}.card{padding:16px;border-radius:16px}.top{margin-bottom:22px}.field .btn{width:100%}.roomline{align-items:flex-start}#mobileShareBar{display:block;position:fixed;z-index:5;left:0;right:0;bottom:0;padding:12px 14px calc(12px + env(safe-area-inset-bottom));background:#111622ed;border-top:1px solid var(--line);backdrop-filter:blur(12px)}#mobileShareBar .btn{width:100%}.desktop-share{display:none!important}}
+@media(min-width:601px){#mobileShareBar{display:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header class="top"><div class="brand">◉ <span>Screen</span>Cast</div><div class="pill">Salas privadas colaborativas</div></header>
+<h1>Uma sala. Todo mundo participa.</h1>
+<p class="sub">Entre em uma sala privada, assista às telas compartilhadas e transmita a sua quando quiser.</p>
+
+<section class="card" id="home">
+ <h2 style="margin:0 0 8px">Entrar ou criar uma sala</h2>
+ <p class="hint">Quem estiver na sala pode assistir e também começar sua própria transmissão. Não há papéis fixos.</p>
+ <button class="btn full" id="createBtn">＋ Criar sala privada</button>
+ <div style="height:1px;background:var(--line);margin:20px 0"></div>
+ <div class="field"><input class="input" id="roomInput" maxlength="24" placeholder="Código da sala" autocomplete="off"><button class="btn" id="joinBtn">Entrar na sala</button></div>
+ <div class="status"><i class="dot" id="homeDot"></i><span id="homeStatus">Pronto para conectar</span></div>
+</section>
+
+<section class="card hidden" id="roomCard">
+ <div class="roomline">
+  <div><div class="hint">CÓDIGO DA SALA PRIVADA</div><div class="code" id="roomCode">------</div></div>
+  <div class="room-actions"><button class="btn secondary" id="copyBtn">Copiar código</button><button class="btn danger" id="leaveBtn">Sair da sala</button></div>
+ </div>
+ <div class="roomline"><b>Participantes e transmissões</b><span class="pill" id="participantCount">1 pessoa na sala</span></div>
+ <div id="streamsGrid"><div class="empty" id="emptyState"><b>Ninguém está transmitindo ainda</b>Quando alguém compartilhar a tela, ela aparecerá aqui para todos.</div></div>
+ <div class="roomline"><span class="status"><i class="dot" id="roomDot"></i><span id="roomStatus">Conectado à sala</span></span><span class="hint" id="sharingCount">0 transmissões ao vivo</span></div>
+ <button class="btn full desktop-share" id="shareBtn">▣ Compartilhar minha tela</button>
+ <p class="hint">Você pode começar ou parar de transmitir sem sair da sala. As transmissões dos outros participantes continuam aparecendo.</p>
+</section>
+<div id="mobileShareBar" class="hidden"><button class="btn" id="mobileShareBtn">▣ Compartilhar minha tela</button></div>
+<div class="notice"><b>Privacidade:</b> qualquer pessoa com o código pode tentar entrar. Compartilhe-o apenas com pessoas de confiança. Cada navegador solicita autorização antes de compartilhar a tela. Use HTTPS para disponibilizar o site.</div>
+<p class="foot">ScreenCast · Projeto experimental para grupos pequenos. A compatibilidade de compartilhamento de tela em celulares depende do navegador e do sistema operacional.</p>
+</main>
+<script>
+(() => {
+ const $=id=>document.getElementById(id);
+ const ICE=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]; // para redes restritivas, adicione um TURN aqui
+ const myId='web-'+Array.from(crypto.getRandomValues(new Uint8Array(4)),b=>b.toString(16).padStart(2,'0')).join('');
+ let ws=null, roomId='', joined=false, localStream=null, queue=Promise.resolve();
+ const known=new Set(), sending=new Map(), receiving=new Map(), tiles=new Map();
+ const show=(id,on=true)=>$(id).classList.toggle('hidden',!on);
+ const cleanCode=s=>s.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,24);
+ const randomCode=()=>Array.from(crypto.getRandomValues(new Uint8Array(8)),b=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[b%32]).join('');
+ const setHomeStatus=(m,live=false)=>{$('homeStatus').textContent=m;$('homeDot').classList.toggle('live',live)};
+ const setRoomStatus=(m,live=false)=>{$('roomStatus').textContent=m;$('roomDot').classList.toggle('live',live)};
+ const emptyHtml='<div class="empty" id="emptyState"><b>Ninguém está transmitindo ainda</b>Quando alguém compartilhar a tela, ela aparecerá aqui para todos.</div>';
+ const store={get:k=>{try{return localStorage.getItem(k)||''}catch(e){return ''}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+ // Servidor de sinalização embutido (mesmo endereço do aplicativo Android).
+ const WSS_URL='wss://fictional-yodel-r4qwpjv6vpp4cw44-8080.app.github.dev/';
+ function updateCounts(){
+   const people=known.size+1, streams=tiles.size+(localStream?1:0);
+   $('participantCount').textContent=people+' participante'+(people===1?'':'s');
+   $('sharingCount').textContent=streams+' transmissão'+(streams===1?'':'ões')+' ao vivo';
+   if(!streams&&!$('emptyState')&&!$('localTile'))$('streamsGrid').innerHTML=emptyHtml;
+ }
+ const send=o=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify(o))};
+ const signal=(to,payload)=>send({type:'signal',to,payload});
+ function flush(l){for(const c of l.pending)l.pc.addIceCandidate(c).catch(()=>{});l.pending=[]}
+ function newLink(id,dir){
+   const pc=new RTCPeerConnection({iceServers:ICE});
+   pc.onicecandidate=e=>{if(e.candidate)signal(id,{kind:'ice',dir,sdpMid:e.candidate.sdpMid,sdpMLineIndex:e.candidate.sdpMLineIndex,candidate:e.candidate.candidate})};
+   return {pc,pending:[],remoteSet:false};
+ }
+ // Transmitir: uma conexão só de envio para cada participante.
+ async function startSending(id){
+   if(!localStream||sending.has(id))return;
+   const l=newLink(id,'b');sending.set(id,l);
+   localStream.getTracks().forEach(t=>l.pc.addTrack(t,localStream));
+   const offer=await l.pc.createOffer();await l.pc.setLocalDescription(offer);
+   signal(id,{kind:'offer',sdp:offer.sdp});
+ }
+ function closeSending(id){const l=sending.get(id);if(l){try{l.pc.close()}catch(e){}sending.delete(id)}}
+ // Assistir: uma conexão só de recebimento para cada transmissor.
+ async function handleOffer(from,sdp){
+   closeReceiving(from);
+   const l=newLink(from,'v');receiving.set(from,l);
+   l.pc.ontrack=e=>addTile(from,e.streams[0]||new MediaStream([e.track]));
+   await l.pc.setRemoteDescription({type:'offer',sdp});l.remoteSet=true;flush(l);
+   const answer=await l.pc.createAnswer();await l.pc.setLocalDescription(answer);
+   signal(from,{kind:'answer',sdp:answer.sdp});
+ }
+ function closeReceiving(id){removeTile(id);const l=receiving.get(id);if(l){try{l.pc.close()}catch(e){}receiving.delete(id)}}
+ async function handleSignal(from,p){
+   if(p.kind==='offer')await handleOffer(from,p.sdp);
+   else if(p.kind==='answer'){const l=sending.get(from);if(l){await l.pc.setRemoteDescription({type:'answer',sdp:p.sdp});l.remoteSet=true;flush(l)}}
+   else if(p.kind==='ice'){
+     const l=(p.dir==='b'?receiving:sending).get(from);if(!l)return;
+     const c={candidate:p.candidate,sdpMid:p.sdpMid,sdpMLineIndex:p.sdpMLineIndex};
+     if(l.remoteSet)await l.pc.addIceCandidate(c).catch(()=>{});else l.pending.push(c);
+   }else if(p.kind==='stop')closeReceiving(from);
+ }
+ function handleMessage(m){
+   if(m.type==='joined'){joined=true;enterRoom();}
+   else if(m.type==='error'){alert('Erro do servidor: '+m.message);leave('Erro: '+m.message)}
+   else if(m.type==='peers')(m.peers||[]).forEach(id=>known.add(id));
+   else if(m.type==='peer-joined'){known.add(m.peerId);startSending(m.peerId)}
+   else if(m.type==='peer-left'){known.delete(m.peerId);closeSending(m.peerId);closeReceiving(m.peerId)}
+   else if(m.type==='signal')return handleSignal(m.from,m.payload||{});
+   updateCounts();
+ }
+ function connect(code){
+   const url=WSS_URL;
+   roomId=code;setHomeStatus('Conectando…');
+   $('createBtn').disabled=$('joinBtn').disabled=true;
+   const sock=ws=new WebSocket(url);
+   sock.onopen=()=>send({type:'join',room:code,peerId:myId,platform:'web'});
+   sock.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch(x){return}queue=queue.then(()=>handleMessage(m)).catch(err=>console.error(err))};
+   sock.onerror=()=>{if(ws===sock&&!joined)leave('Não foi possível conectar ao servidor. Verifique se o Codespace está ligado e a porta 8080 está pública.')};
+   sock.onclose=()=>{if(ws===sock)leave('Conexão com o servidor encerrada.')};
+   return true;
+ }
+ function enterRoom(){
+   $('roomCode').textContent=roomId;show('home',false);show('roomCard');show('mobileShareBar');
+   setShareButton(false);setRoomStatus('Conectado à sala',true);setHomeStatus('Você entrou na sala',true);updateCounts();
+ }
+ function removeTile(id){
+   const t=tiles.get(id);if(!t)return;
+   try{t.video.srcObject=null}catch(e){}t.wrap.remove();tiles.delete(id);updateCounts();
+ }
+ function addTile(id,media){
+   if(tiles.has(id)){tiles.get(id).video.srcObject=media;return}
+   const empty=$('emptyState');if(empty)empty.remove();
+   const wrap=document.createElement('article');wrap.className='stream-tile';
+   const video=document.createElement('video');video.autoplay=true;video.playsInline=true;video.controls=true;video.muted=true;video.srcObject=media;
+   const label=document.createElement('div');label.className='stream-label';
+   const dot=document.createElement('i');dot.className='dot live';
+   const name=document.createElement('span');name.textContent='Transmissão de '+String(id).slice(0,12);
+   label.append(dot,name);wrap.append(video,label);$('streamsGrid').append(wrap);
+   tiles.set(id,{wrap,video});updateCounts();
+   video.play().catch(()=>{});
+ }
+ function removeLocalTile(){const t=$('localTile');if(t)t.remove()}
+ function addLocalTile(media){
+   removeLocalTile();const empty=$('emptyState');if(empty)empty.remove();
+   const wrap=document.createElement('article');wrap.className='stream-tile';wrap.id='localTile';
+   const video=document.createElement('video');video.autoplay=true;video.muted=true;video.playsInline=true;video.srcObject=media;
+   const label=document.createElement('div');label.className='stream-label';
+   const dot=document.createElement('i');dot.className='dot live';const name=document.createElement('span');name.textContent='Você · transmitindo';
+   label.append(dot,name);wrap.append(video,label);$('streamsGrid').prepend(wrap);
+ }
+ function setShareButton(active){
+   const label=active?'■ Parar minha transmissão':'▣ Compartilhar minha tela';
+   $('shareBtn').textContent=label;$('mobileShareBtn').textContent=label;
+   $('shareBtn').classList.toggle('danger',active);$('mobileShareBtn').classList.toggle('danger',active);
+ }
+ async function toggleShare(){
+   if(localStream){stopSharing();return}
+   if(!navigator.mediaDevices?.getDisplayMedia){alert('Este navegador/dispositivo não oferece compartilhamento de tela nesta página. Use um computador ou o aplicativo Android do ScreenCast.');return}
+   try{
+     localStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});
+     addLocalTile(localStream);setShareButton(true);setRoomStatus('Você está transmitindo',true);
+     localStream.getVideoTracks()[0].addEventListener('ended',stopSharing);
+     for(const id of known)startSending(id);
+     updateCounts();
+   }catch(e){if(e.name!=='NotAllowedError')alert('Não foi possível iniciar a transmissão: '+e.message)}
+ }
+ function stopSharing(){
+   if(!localStream)return;
+   localStream.getTracks().forEach(t=>t.stop());localStream=null;
+   for(const id of [...sending.keys()]){signal(id,{kind:'stop'});closeSending(id)}
+   removeLocalTile();setShareButton(false);setRoomStatus('Conectado à sala',true);updateCounts();
+ }
+ function leave(msg){
+   stopSharing();
+   for(const id of [...sending.keys()])closeSending(id);
+   for(const id of [...receiving.keys()])closeReceiving(id);
+   const sock=ws;ws=null;try{sock&&sock.close()}catch(e){}
+   known.clear();tiles.clear();joined=false;roomId='';
+   $('streamsGrid').innerHTML=emptyHtml;
+   show('roomCard',false);show('mobileShareBar',false);show('home');
+   $('joinBtn').disabled=false;$('createBtn').disabled=false;setHomeStatus(msg||'Você saiu da sala');
+ }
+ $('createBtn').onclick=()=>connect(randomCode());
+ $('joinBtn').onclick=()=>{const code=cleanCode($('roomInput').value);if(!code){alert('Digite o código da sala.');return}connect(code)};
+ $('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(roomId);$('copyBtn').textContent='Copiado!';setTimeout(()=>$('copyBtn').textContent='Copiar código',1600)}catch(e){alert('Código da sala: '+roomId)}};
+ $('shareBtn').onclick=toggleShare;$('mobileShareBtn').onclick=toggleShare;
+ $('leaveBtn').onclick=()=>leave('Você saiu da sala');
+})();
+</script>
+</body></html>
