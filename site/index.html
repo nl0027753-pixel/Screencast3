@@ -64,7 +64,7 @@ h1{font-size:clamp(27px,5vw,42px);line-height:1.1;margin:0 0 10px}.sub{color:var
  const emptyHtml='<div class="empty" id="emptyState"><b>Ninguém está transmitindo ainda</b>Quando alguém compartilhar a tela, ela aparecerá aqui para todos.</div>';
  const store={get:k=>{try{return localStorage.getItem(k)||''}catch(e){return ''}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
  // Servidor de sinalização embutido (mesmo endereço do aplicativo Android).
- const WSS_URL='wss://fictional-yodel-r4qwpjv6vpp4cw44-8080.app.github.dev/';
+ const WSS_URL='wss://screencast3-1.onrender.com/';
  function updateCounts(){
    const people=known.size+1, streams=tiles.size+(localStream?1:0);
    $('participantCount').textContent=people+' participante'+(people===1?'':'s');

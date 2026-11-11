@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
 
     private companion object {
         // Servidor de sinalização embutido (o mesmo do site). Não é preciso digitar nada.
-        const val WSS_URL = "wss://fictional-yodel-r4qwpjv6vpp4cw44-8080.app.github.dev/"
+        const val WSS_URL = "wss://screencast3-1.onrender.com/"
         const val CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
     }
 
